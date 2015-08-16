@@ -22,9 +22,10 @@ class TenantQueryBuilderTest extends PHPUnit_Framework_TestCase
     	/* Expectation */
 		$nestedRawQuery = $this->getMockQueryBuilder();
 		$nestedRawQuery->shouldReceive('getBindings')->twice()->andReturn(['type' => 'value']);
+		$nestedRawQuery->shouldReceive('setBindings')->once()->with([ 'where' => ['flbr' => 1]]);
 
 		$nestedQuery = m::mock('Illuminate\Database\Eloquent\Builder');
-		$nestedQuery->shouldReceive('getQuery')->times(3)->andReturn($nestedRawQuery);
+		$nestedQuery->shouldReceive('getQuery')->times(4)->andReturn($nestedRawQuery);
 		$nestedQuery->shouldReceive('whereNotBetween')->once()->with('foo', ['bar', 'boo']);
 		$nestedQuery->shouldReceive('whereNull')->once()->with('bah');
 
@@ -37,6 +38,7 @@ class TenantQueryBuilderTest extends PHPUnit_Framework_TestCase
 
         $builder->getQuery()->shouldReceive('addNestedWhereQuery')->once()->with($nestedRawQuery);
         $builder->getQuery()->shouldReceive('setBindings')->twice()->with(['type' => 'value']);
+        $builder->getQuery()->shouldReceive('getRawBindings')->once()->andReturn([ 'where' => ['flbr' => 1]] );
 
         /* Execution */
         $result1 = $builder->whereNotBetween('foo', ['bar', 'boo']);

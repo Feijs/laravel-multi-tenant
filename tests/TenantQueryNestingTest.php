@@ -41,9 +41,9 @@ class TenantQueryNestingTest extends PHPUnit_Framework_TestCase
 		$nestedQuery = $this->model->allTenants()->whereRaw("table.tenant_id = '1'");
 
 		//Query to be tested
-		$tenantQuery = $this->model->getQuery();
+		$tenantQuery = $this->model->newQuery();
 
- 		$this->assertEquals($nestedQuery->getBindings(), $tenantQuery->getBindings());
+ 		$this->assertEquals($nestedQuery->getQuery()->getRawBindings(), $tenantQuery->getQuery()->getRawBindings());
 		$this->assertEquals($nestedQuery->toSql(), $tenantQuery->toSql());	
 	}
 
@@ -64,7 +64,7 @@ class TenantQueryNestingTest extends PHPUnit_Framework_TestCase
 		$tenantQuery = $this->getTestOuterQuery($this->model->newQuery());
 		$tenantQuery = $this->getTestSubQuery($tenantQuery);
 
- 		$this->assertEquals($nestedQuery->getBindings(), $tenantQuery->getBindings());
+ 		$this->assertEquals($nestedQuery->getQuery()->getRawBindings(), $tenantQuery->getQuery()->getRawBindings());
 		$this->assertEquals($nestedQuery->toSql(), $tenantQuery->toSql());
 	}
 
@@ -91,9 +91,9 @@ class TenantQueryNestingTest extends PHPUnit_Framework_TestCase
 							});
 
 		//Query to be tested
-		$tenantQuery = $globalScopeModel->getQuery();
+		$tenantQuery = $globalScopeModel->newQuery();
 
- 		$this->assertEquals($nestedQuery->getBindings(), $tenantQuery->getBindings());
+ 		$this->assertEquals($nestedQuery->getQuery()->getRawBindings(), $tenantQuery->getQuery()->getRawBindings());
 		$this->assertEquals($nestedQuery->toSql(), $tenantQuery->toSql());	
 	}
 

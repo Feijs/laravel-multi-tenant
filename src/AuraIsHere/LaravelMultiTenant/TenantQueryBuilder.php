@@ -77,6 +77,9 @@ class TenantQueryBuilder extends Builder
 			// and add it as a nested where
     		$query = $this->model->newQueryWithoutScopes();
 
+			//Add any existing where bindings
+    		$query->getQuery()->setBindings(['where' => $this->query->getRawBindings()['where']] );
+
 			call_user_func_array(array($query, $method), $parameters); 
 
 			$this->query->addNestedWhereQuery($query->getQuery());
