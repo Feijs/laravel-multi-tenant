@@ -1,6 +1,7 @@
 <?php
 
 use AuraIsHere\LaravelMultiTenant\TenantScope;
+use Illuminate\Database\Eloquent\Builder;
 use Mockery as m;
 
 class TenantScopeTest extends PHPUnit_Framework_TestCase {
@@ -37,32 +38,9 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$scope->shouldReceive('getModelTenants')->once()->with($model)->andReturn(['column' => 1]);
 
 		$builder->shouldReceive('getModel')->andReturn($model);
-		$builder->shouldReceive('whereRaw')->once()->with("table.column = '1'");
-
-		$model->shouldReceive('getTenantWhereClause')->once()->with('column', 1)->andReturn("table.column = '1'");
+		$builder->shouldReceive('where')->once()->with("column",  "=", "1");
 
 		$scope->apply($builder);
-	}
-
-	public function testRemove()
-	{
-		$scope   = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
-		$builder = m::mock('Illuminate\Database\Eloquent\Builder');
-		$model   = m::mock('Illuminate\Database\Eloquent\Model');
-
-		$scope->shouldDeferMissing();
-		$scope->shouldReceive('getModelTenants')->once()->with($model)->andReturn(['column' => 1]);
-
-		$builder->shouldReceive('getModel')->andReturn($model);
-		$builder->shouldReceive('getQuery')->andReturn($query = m::mock('StdClass'));
-
-		$model->shouldReceive('getTenantWhereClause')->once()->with('column', 1)->andReturn("table.column = '1'");
-
-		$query->wheres = [['type' => 'Null', 'column' => 'foo'], ['type' => 'raw', 'sql' => "table.column = '1'"]];
-
-		$scope->remove($builder);
-
-		$this->assertEquals($query->wheres, [['type' => 'Null', 'column' => 'foo']]);
 	}
 
 	public function testCreating()
@@ -106,22 +84,6 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$scope->getTenantId('column');
 	}
 
-	public function testIsTenantConstraint()
-	{
-		$scope        = new TenantScope;
-		$model        = m::mock('Illuminate\Database\Eloquent\Model');
-		$tenantColumn = 'column';
-		$tenantId     = 1;
-
-		$model->shouldReceive('getTenantWhereClause')->with($tenantColumn, $tenantId)->andReturn("table.column = '1'");
-
-		$where = ['type' => 'raw', 'sql' => "table.column = '1'"];
-		$this->assertTrue($scope->isTenantConstraint($model, $where, $tenantColumn, $tenantId));
-
-		$where = ['type' => 'raw', 'sql' => "table.column = '2'"];
-		$this->assertFalse($scope->isTenantConstraint($model, $where, $tenantColumn, $tenantId));
-	}
-
 	public function testDisable()
 	{
 		$scope   = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
@@ -132,7 +94,7 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$scope->shouldReceive('getModelTenants')->with($model)->andReturn(['column' => 1])->never();
 
 		$builder->shouldReceive('getModel')->andReturn($model)->never();
-		$builder->shouldReceive('whereRaw')->with("table.column = '1'")->never();
+		$builder->shouldReceive('where')->with("column",  "=", "1")->never();
 
 		$model->shouldReceive('getTenantWhereClause')->with('column', 1)->andReturn("table.column = '1'")->never();
 
@@ -140,4 +102,3 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$scope->apply($builder);
 	}
 }
- 
