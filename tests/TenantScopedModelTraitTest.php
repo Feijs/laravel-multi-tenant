@@ -1,6 +1,7 @@
 <?php
 
 use Mockery as m;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use AuraIsHere\LaravelMultiTenant\Traits\TenantScopedModelTrait;
 
@@ -13,12 +14,23 @@ class TenantScopedModelTraitTest extends PHPUnit_Framework_TestCase {
 
 	public function testAllTenants()
 	{
-		// Not sure how to write this test
+		$model = m::mock(new TenantScopedModelStub);
+
+		$this->assertEquals('newQueryWithoutScopeStub', $model::allTenants());
 	}
 
 	public function testGetTenantColumns()
 	{
-		// This one either
+		$model = m::mock('TenantScopedModelStub');
+		$model->shouldDeferMissing();
+
+		Config::shouldReceive('get')->with('laravel-multi-tenant::default_tenant_columns')
+			  ->once()->andReturn('company_id');
+		$this->assertEquals('company_id', $model->getTenantColumns());
+
+		$model->tenantColumns = 'tenant_id';
+		$this->assertEquals('tenant_id', $model->getTenantColumns());
+
 	}
 
 	public function testGetTenantWhereClause()
@@ -47,6 +59,11 @@ class TenantScopedModelStub extends ParentModel {
 	public function getTable()
 	{
 		return 'table';
+	}
+
+	public static function newQueryWithoutScope(\Illuminate\Database\Eloquent\ScopeInterface $scope) 
+	{ 
+		return "newQueryWithoutScopeStub"; 
 	}
 }
 
