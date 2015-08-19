@@ -1,6 +1,8 @@
 <?php
 
 use Mockery as m;
+use Illuminate\Support\Facades\App;
+use AuraIsHere\LaravelMultiTenant\TenantScope;
 use AuraIsHere\LaravelMultiTenant\TenantQueryBuilder;
 
 class TenantQueryBuilderTest extends PHPUnit_Framework_TestCase
@@ -20,6 +22,10 @@ class TenantQueryBuilderTest extends PHPUnit_Framework_TestCase
 	public function testShouldBeNested()
     {
     	/* Expectation */
+    	$tenantScope = new TenantScope;
+		App::shouldReceive('make')->atLeast(1)->with("AuraIsHere\LaravelMultiTenant\TenantScope")->andReturn($tenantScope);
+		$tenantScope->addTenant('tenant_id', 1);
+
 		$nestedRawQuery = $this->getMockQueryBuilder();
 		$nestedRawQuery->shouldReceive('getBindings')->twice()->andReturn(['type' => 'value']);
 		$nestedRawQuery->shouldReceive('setBindings')->once()->with([ 'where' => ['flbr' => 1]]);

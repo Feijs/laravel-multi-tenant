@@ -1,8 +1,9 @@
 <?php namespace AuraIsHere\LaravelMultiTenant\Traits;
 
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use AuraIsHere\LaravelMultiTenant\TenantScope;
 use AuraIsHere\LaravelMultiTenant\TenantQueryBuilder;
@@ -35,18 +36,6 @@ trait TenantScopedModelTrait {
 	}
 
 	/**
-	 * Returns a new builder without the tenant scope applied.
-	 *
-	 *     $allUsers = User::allTenants()->get();
-	 *
-	 * @return \Illuminate\Database\Eloquent\Builder
-	 */
-	public static function allTenants()
-	{
-		return with(new static)->newOriginalQueryWithoutScope(new TenantScope);
-	}
-
-	/**
 	 * Get the name of the "tenant id" column.
 	 *
 	 * @return string
@@ -54,20 +43,6 @@ trait TenantScopedModelTrait {
 	public function getTenantColumns()
 	{
 		return isset($this->tenantColumns) ? $this->tenantColumns : Config::get('laravel-multi-tenant::default_tenant_columns');
-	}
-
-	/**
-	 * Prepare a raw where clause. Do it this way instead of using where()
-	 * to avoid issues with bindings when removing.
-	 *
-	 * @param $tenantColumn
-	 * @param $tenantId
-	 *
-	 * @return string
-	 */
-	public function getTenantWhereClause($tenantColumn, $tenantId)
-	{
-		return "{$this->getTable()}.{$tenantColumn} = '{$tenantId}'";
 	}
 
 	/**
@@ -174,7 +149,7 @@ trait TenantScopedModelTrait {
 	{
 		foreach ($this->getGlobalScopes() as $scope)
 		{
-			if($scope instanceof LoftyScope) {
+			if($scope instanceof LoftyScope || $scope instanceof SoftDeletingScope) {
 				$scope->apply($builder, $this);
 			}
 			else {

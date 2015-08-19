@@ -2,6 +2,7 @@
 
 use Closure;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -38,6 +39,9 @@ class TenantQueryBuilder extends Builder
 	{
 		$this->model = $model;
 		$this->query->from($model->getTable());
+
+		$tenantScope = App::make("AuraIsHere\LaravelMultiTenant\TenantScope");
+		$tenantScope->extend($this);
 
 		//Add soft deleting macro's to this builder
 		if(method_exists($this->model, 'bootSoftDeletingTrait')) {
