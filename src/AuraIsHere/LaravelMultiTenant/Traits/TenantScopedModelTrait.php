@@ -33,18 +33,6 @@ trait TenantScopedModelTrait {
 	}
 
 	/**
-	 * Returns a new builder without the tenant scope applied.
-	 *
-	 *     $allUsers = User::allTenants()->get();
-	 *
-	 * @return \Illuminate\Database\Eloquent\Builder
-	 */
-	public static function allTenants()
-	{
-		return with(new static)->newQueryWithoutScope(new TenantScope);
-	}
-
-	/**
 	 * Get the name of the "tenant id" column.
 	 *
 	 * @return string
@@ -52,20 +40,6 @@ trait TenantScopedModelTrait {
 	public function getTenantColumns()
 	{
 		return isset($this->tenantColumns) ? $this->tenantColumns : Config::get('laravel-multi-tenant::default_tenant_columns');
-	}
-
-	/**
-	 * Prepare a raw where clause. Do it this way instead of using where()
-	 * to avoid issues with bindings when removing.
-	 *
-	 * @param $tenantColumn
-	 * @param $tenantId
-	 *
-	 * @return string
-	 */
-	public function getTenantWhereClause($tenantColumn, $tenantId)
-	{
-		return "{$this->getTable()}.{$tenantColumn} = '{$tenantId}'";
 	}
 
 	/**

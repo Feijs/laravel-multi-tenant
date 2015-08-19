@@ -12,13 +12,6 @@ class TenantScopedModelTraitTest extends PHPUnit_Framework_TestCase {
 		m::close();
 	}
 
-	public function testAllTenants()
-	{
-		$model = m::mock(new TenantScopedModelStub);
-
-		$this->assertEquals('newQueryWithoutScopeStub', $model::allTenants());
-	}
-
 	public function testGetTenantColumns()
 	{
 		$model = m::mock('TenantScopedModelStub');
@@ -31,16 +24,6 @@ class TenantScopedModelTraitTest extends PHPUnit_Framework_TestCase {
 		$model->tenantColumns = 'tenant_id';
 		$this->assertEquals('tenant_id', $model->getTenantColumns());
 
-	}
-
-	public function testGetTenantWhereClause()
-	{
-		$model = m::mock('TenantScopedModelStub');
-		$model->shouldDeferMissing();
-
-		$whereClause = $model->getTenantWhereClause('column', 1);
-
-		$this->assertEquals("table.column = '1'", $whereClause);
 	}
 
 	/**
@@ -59,11 +42,6 @@ class TenantScopedModelStub extends ParentModel {
 	public function getTable()
 	{
 		return 'table';
-	}
-
-	public static function newQueryWithoutScope(\Illuminate\Database\Eloquent\ScopeInterface $scope) 
-	{ 
-		return "newQueryWithoutScopeStub"; 
 	}
 }
 

@@ -18,6 +18,10 @@ class TenantScopeComponentTest extends ComponentTestCase
 		$this->assertNotContains('1 == 1', $result);
 	}
 
+	/**
+	 * To avoid tenant scope propagating to other tests
+     * @runInSeparateProcess
+     */
 	public function testScopeRemoval()
 	{
 		$this->tenantScope->addTenant('tenant_id', 5);
@@ -32,6 +36,9 @@ class TenantScopeComponentTest extends ComponentTestCase
 		$processed_builder = $this->getTestOuterQuery($processed_builder);
 		$processed_builder = $this->getTestSubQuery($processed_builder);
 
-		$this->assertEquals($empty_builder, $processed_builder);
+		$empty_query = $empty_builder->getQuery();
+		$processed_query = $processed_builder->getQuery();
+
+		$this->assertEquals($empty_query->getRawBindings(), $processed_query->getRawBindings());
 	}
 }

@@ -9,6 +9,7 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 	public function tearDown()
 	{
 		m::close();
+		parent::tearDown();
 	}
 
 	public function testAccessors()
@@ -39,6 +40,7 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 
 		$builder->shouldReceive('getModel')->andReturn($model);
 		$builder->shouldReceive('where')->once()->with("column",  "=", "1");
+		$builder->shouldReceive('macro')->once()->with("allTenants", m::type('Closure'));
 
 		$scope->apply($builder);
 	}
@@ -101,4 +103,22 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$scope->disable();
 		$scope->apply($builder);
 	}
+
+	public function testAllTenantsExtension()
+    {
+        $builder = m::mock('Illuminate\Database\Eloquent\Builder');
+        $builder->shouldDeferMissing();
+        
+        $scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope[remove]');
+        $scope->extend($builder);
+        $callback = $builder->getMacro('allTenants');
+
+        $givenBuilder = m::mock('Illuminate\Database\Eloquent\Builder');
+        $givenBuilder->shouldReceive('getModel')->andReturn($model = m::mock('Illuminate\Database\Eloquent\Model'));
+        
+        $scope->shouldReceive('remove')->once()->with($givenBuilder);
+
+        $result = $callback($givenBuilder);
+        $this->assertEquals($givenBuilder, $result);
+    }
 }

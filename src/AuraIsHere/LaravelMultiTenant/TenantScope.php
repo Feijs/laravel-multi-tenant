@@ -4,10 +4,11 @@ use Sofa\GlobalScope\GlobalScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ScopeInterface;
+use AuraIsHere\LaravelMultiTenant\Contracts\LoftyScope;
 use AuraIsHere\LaravelMultiTenant\Exceptions\TenantColumnUnknownException;
 
-class TenantScope extends GlobalScope implements ScopeInterface {
-
+class TenantScope extends GlobalScope implements ScopeInterface
+{
 	private $enabled = true;
 
 	/** @var \Illuminate\Database\Eloquent\Model|\AuraIsHere\LaravelMultiTenant\Traits\TenantScopedModelTrait */
@@ -78,7 +79,7 @@ class TenantScope extends GlobalScope implements ScopeInterface {
 	/**
 	 * Apply the scope to a given Eloquent query builder.
 	 *
-	 * @param Builder|\Illuminate\Database\Query\Builder $builder
+	 * @param Illuminate\Database\Eloquent\Builder $builder
 	 *
 	 * @return void
 	 */
@@ -87,13 +88,26 @@ class TenantScope extends GlobalScope implements ScopeInterface {
 		if (! $this->enabled) return;
 
 		$model = $builder->getModel();
-
 		// Use whereRaw instead of where to avoid issues with bindings when removing
 		foreach ($this->getModelTenants($model) as $tenantColumn => $tenantId)
 		{
 			$builder->where($tenantColumn, '=', $tenantId);
 		}
+
+		$this->extend($builder);
 	}
+
+	/**
+	 * Add macro function to the builder
+	 * @param Illuminate\Database\Eloquent\Builder $builder
+	 */
+    public function extend(Builder $builder)
+    {
+        $builder->macro('allTenants', function (Builder $builder) {
+            $this->remove($builder);
+            return $builder;
+        });
+    }
 
 	public function creating(Model $model)
 	{

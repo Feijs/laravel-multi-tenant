@@ -15,9 +15,10 @@ abstract class ComponentTestCase extends PHPUnit_Framework_TestCase
 	public function setUp()
     {
 		$this->tenantScope = new TenantScope;
+		$this->tenantScope->addTenant('tenant_id', 1);
 
 		//Mock facades
-		App::shouldReceive('make')->once()->with("AuraIsHere\LaravelMultiTenant\TenantScope")->andReturn($this->tenantScope);
+		App::shouldReceive('make')->atLeast(1)->with("AuraIsHere\LaravelMultiTenant\TenantScope")->andReturn($this->tenantScope);
 		Config::shouldReceive('get')->with('laravel-multi-tenant::default_tenant_columns')->andReturn(['tenant_id']);
 
 		$this->model = new ComponentTestCaseModelStub;
@@ -26,6 +27,8 @@ abstract class ComponentTestCase extends PHPUnit_Framework_TestCase
 
 	public function tearDown()
     {
+    	unset($this->model);
+    	unset($this->tenantScope);
         m::close();
     }
 
