@@ -4,6 +4,8 @@ namespace AuraIsHere\LaravelMultiTenant\Traits;
 
 use AuraIsHere\LaravelMultiTenant\Exceptions\TenantModelNotFoundException;
 use AuraIsHere\LaravelMultiTenant\TenantScope;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -18,7 +20,7 @@ trait TenantScopedModelTrait
 {
     public static function bootTenantScopedModelTrait()
     {
-        $tenantScope = app('AuraIsHere\LaravelMultiTenant\TenantScope');
+        $tenantScope = App::make('AuraIsHere\LaravelMultiTenant\TenantScope');
 
         // Add the global scope that will handle all operations except create()
         static::addGlobalScope($tenantScope);
@@ -48,7 +50,7 @@ trait TenantScopedModelTrait
      */
     public function getTenantColumns()
     {
-        return isset($this->tenantColumns) ? $this->tenantColumns : config('tenant.default_tenant_columns');
+        return isset($this->tenantColumns) ? $this->tenantColumns : Config::get('tenant.default_tenant_columns');
     }
 
     /**
