@@ -1,82 +1,76 @@
-<?php namespace AuraIsHere\LaravelMultiTenant\Traits;
+<?php
 
+namespace AuraIsHere\LaravelMultiTenant\Traits;
+
+use AuraIsHere\LaravelMultiTenant\Contracts\LoftyScope;
+use AuraIsHere\LaravelMultiTenant\Exceptions\TenantModelNotFoundException;
+use AuraIsHere\LaravelMultiTenant\TenantQueryBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use AuraIsHere\LaravelMultiTenant\TenantScope;
-use AuraIsHere\LaravelMultiTenant\TenantQueryBuilder;
-use AuraIsHere\LaravelMultiTenant\Contracts\LoftyScope;
-use AuraIsHere\LaravelMultiTenant\Facades\TenantScopeFacade;
-use AuraIsHere\LaravelMultiTenant\Exceptions\TenantModelNotFoundException;
 
 /**
- * Class TenantScopedModelTrait
+ * Class TenantScopedModelTrait.
  *
- * @package AuraIsHere\LaravelMultiTenant
  *
  * @method static void addGlobalScope(\Illuminate\Database\Eloquent\ScopeInterface $scope)
  * @method static void creating(callable $callback)
  */
-trait TenantScopedModelTrait {
+trait TenantScopedModelTrait
+{
+    public static function bootTenantScopedModelTrait()
+    {
+        $tenantScope = App::make("AuraIsHere\LaravelMultiTenant\TenantScope");
 
-	public static function bootTenantScopedModelTrait()
-	{
-		$tenantScope = App::make("AuraIsHere\LaravelMultiTenant\TenantScope");
+        // Add the global scope that will handle all operations except create()
+        static::addGlobalScope($tenantScope);
 
-		// Add the global scope that will handle all operations except create()
-		static::addGlobalScope($tenantScope);
+        // Add an observer that will automatically add the tenant id when create()-ing
+        static::creating(function (Model $model) use ($tenantScope) {
+            $tenantScope->creating($model);
+        });
+    }
 
-		// Add an observer that will automatically add the tenant id when create()-ing
-		static::creating(function (Model $model) use ($tenantScope)
-		{
-			$tenantScope->creating($model);
-		});
-	}
+    /**
+     * Get the name of the "tenant id" column.
+     *
+     * @return string
+     */
+    public function getTenantColumns()
+    {
+        return isset($this->tenantColumns) ? $this->tenantColumns : Config::get('laravel-multi-tenant::default_tenant_columns');
+    }
 
-	/**
-	 * Get the name of the "tenant id" column.
-	 *
-	 * @return string
-	 */
-	public function getTenantColumns()
-	{
-		return isset($this->tenantColumns) ? $this->tenantColumns : Config::get('laravel-multi-tenant::default_tenant_columns');
-	}
+    /**
+     * Override the default findOrFail method so that we can rethrow a more useful exception.
+     * Otherwise it can be very confusing why queries don't work because of tenant scoping issues.
+     *
+     * @param       $id
+     * @param array $columns
+     *
+     * @throws TenantModelNotFoundException
+     */
+    public static function findOrFail($id, $columns = ['*'])
+    {
+        try {
+            return parent::findOrFail($id, $columns);
+        } catch (ModelNotFoundException $e) {
+            throw with(new TenantModelNotFoundException())->setModel(get_called_class());
+        }
+    }
 
-	/**
-	 * Override the default findOrFail method so that we can rethrow a more useful exception.
-	 * Otherwise it can be very confusing why queries don't work because of tenant scoping issues.
-	 *
-	 * @param       $id
-	 * @param array $columns
-	 *
-	 * @throws TenantModelNotFoundException
-	 */
-	public static function findOrFail($id, $columns = array('*'))
-	{
-		try
-		{
-			return parent::findOrFail($id, $columns);
-		}
-
-		catch (ModelNotFoundException $e)
-		{
-			throw with(new TenantModelNotFoundException)->setModel(get_called_class());
-		}
-	}
-
-	/**
+    /**
      * Get a new query builder with nested where for the model's table. 
      *
      * @return AuraIsHere\LaravelMultiTenant\TenantQueryBuilder
      */
     public function newQuery()
     {
-	    $tenant_builder = $this->newTenantQueryWithoutScopes();
-	    
-        //Create a normal query first, allowing the (interfaced) 
+        $tenant_builder = $this->newTenantQueryWithoutScopes();
+
+        //Create a normal query first, allowing the (interfaced)
         // scope to use the whereRaw from the non-overridden
         // Eloquent\Query
         $tenant_builder->setQuery($this->newOriginalQuery()->getQuery());
@@ -85,30 +79,32 @@ trait TenantScopedModelTrait {
     }
 
     /**
-	 * Get a new query builder for the model's table.
-	 *  without the nesting behaviour
-	 *
-	 * @return \Illuminate\Database\Eloquent\Builder
-	 */
-	public function newOriginalQuery()
-	{
-		$builder = $this->newQueryWithoutScopes();
+     * Get a new query builder for the model's table.
+     *  without the nesting behaviour.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function newOriginalQuery()
+    {
+        $builder = $this->newQueryWithoutScopes();
 
-		return $this->applyGlobalScopes($builder);	
-	}
+        return $this->applyGlobalScopes($builder);
+    }
 
-	/**
-	 * Get a new query instance without a given scope.
-	 *  and without nesting behaviour
-	 *
-	 * @param  \Illuminate\Database\Eloquent\ScopeInterface  $scope
-	 * @return \Illuminate\Database\Eloquent\Builder
-	 */
-	public function newOriginalQueryWithoutScope($scope)
-	{
-		$this->getGlobalScope($scope)->remove($builder = $this->newOriginalQuery(), $this);
-		return $builder;
-	}
+    /**
+     * Get a new query instance without a given scope.
+     *  and without nesting behaviour.
+     *
+     * @param \Illuminate\Database\Eloquent\ScopeInterface $scope
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function newOriginalQueryWithoutScope($scope)
+    {
+        $this->getGlobalScope($scope)->remove($builder = $this->newOriginalQuery(), $this);
+
+        return $builder;
+    }
 
     /**
      * Get a new query builder with nested where
@@ -127,10 +123,11 @@ trait TenantScopedModelTrait {
         return $builder->setModel($this)->with($this->with);
     }
 
-	/**
+    /**
      * Create a new Eloquent Tenant query builder for the model.
      *
-     * @param  \Illuminate\Database\Query\Builder $query
+     * @param \Illuminate\Database\Query\Builder $query
+     *
      * @return AuraIsHere\LaravelMultiTenant\TenantQueryBuilder|static
      */
     public function newEloquentTenantBuilder($query)
@@ -139,33 +136,34 @@ trait TenantScopedModelTrait {
     }
 
     /**
-	 * Apply all of the global scopes to an Eloquent builder
-	 *  or it's nested 
-	 *
-	 * @param  \Illuminate\Database\Eloquent\Builder  $builder
-	 * @return \Illuminate\Database\Eloquent\Builder
-	 */
-	public function applyGlobalScopes($builder)
-	{
-		foreach ($this->getGlobalScopes() as $scope)
-		{
-			if($scope instanceof LoftyScope || $scope instanceof SoftDeletingScope) {
-				$scope->apply($builder, $this);
-			}
-			else {
-				$nestable = $this->newQueryWithoutScopes();
-				$scope->apply($nestable, $this);
-				$builder->addNestedWhereQuery($nestable->getQuery());
-			}
-		}
-		return $builder;
-	}
+     * Apply all of the global scopes to an Eloquent builder
+     *  or it's nested.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function applyGlobalScopes($builder)
+    {
+        foreach ($this->getGlobalScopes() as $scope) {
+            if ($scope instanceof LoftyScope || $scope instanceof SoftDeletingScope) {
+                $scope->apply($builder, $this);
+            } else {
+                $nestable = $this->newQueryWithoutScopes();
+                $scope->apply($nestable, $this);
+                $builder->addNestedWhereQuery($nestable->getQuery());
+            }
+        }
 
- 	/**
+        return $builder;
+    }
+
+    /**
      * Handle dynamic method calls into the model.
      *
-     * @param  string  $method
-     * @param  array   $parameters
+     * @param string $method
+     * @param array  $parameters
+     *
      * @return mixed
      */
     public function __call($method, $parameters)
@@ -173,8 +171,9 @@ trait TenantScopedModelTrait {
         if (in_array($method, ['increment', 'decrement'])) {
             return call_user_func_array([$this, $method], $parameters);
         }
-            	
+
         $query = $this->newQuery();
+
         return call_user_func_array([$query, $method], $parameters);
     }
-} 
+}

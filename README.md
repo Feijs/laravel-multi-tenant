@@ -1,7 +1,7 @@
 Laravel Multi Tenant
 ====================
 
-![](https://travis-ci.org/AuraEQ/laravel-multi-tenant.svg?branch=master)
+![](https://travis-ci.org/AuraEQ/laravel-multi-tenant.svg?branch=laravel-4.2)
 
 A general purpose multi-tenancy package for Laravel 4.2+. Accidentally derived from the work of [@tonydew](https://github.com/tonydew), and with help from [@rizqidjamaluddin](https://github.com/rizqidjamaluddin)
 
@@ -77,6 +77,15 @@ $allModels = Model::allTenants()->get(); //You can run any fluent query builder 
 When you are developing a multi tenanted application, it can be confusing sometimes why you keep getting `ModelNotFound` exceptions.
 
 Laravel Multi Tenant will catch those exceptions, and re-throw them as `ModelNotFoundForTenant`, to help you out :)
+
+### Global scopes
+To maintain data separation, other global scopes are nested by default. To avoid this behaviour, you may implement the LoftyScope interface.
+
+```php
+use AuraIsHere\LaravelMultiTenant\Contracts\LoftyScope;
+
+class SomeGlobalScope implements ScopeInterface, LoftyScope
+```
 
 ## Contributing
 

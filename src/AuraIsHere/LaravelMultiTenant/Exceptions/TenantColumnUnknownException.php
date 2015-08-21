@@ -1,7 +1,9 @@
-<?php namespace AuraIsHere\LaravelMultiTenant\Exceptions;
+<?php
+
+namespace AuraIsHere\LaravelMultiTenant\Exceptions;
 
 use Exception;
 
-class TenantColumnUnknownException extends Exception {
-
-} 
+class TenantColumnUnknownException extends Exception
+{
+}

@@ -1,121 +1,120 @@
 <?php
 
 use AuraIsHere\LaravelMultiTenant\TenantScope;
-use Illuminate\Database\Eloquent\Builder;
 use Mockery as m;
 
-class TenantScopeTest extends PHPUnit_Framework_TestCase {
+class TenantScopeTest extends PHPUnit_Framework_TestCase
+{
+    public function tearDown()
+    {
+        m::close();
+        parent::tearDown();
+    }
 
-	public function tearDown()
-	{
-		m::close();
-		parent::tearDown();
-	}
+    public function testAccessors()
+    {
+        $tenantScope = new TenantScope();
 
-	public function testAccessors()
-	{
-		$tenantScope = new TenantScope();
+        $tenantScope->addTenant('column', 1);
 
-		$tenantScope->addTenant('column', 1);
+        $tenants = $tenantScope->getTenants();
+        $this->assertEquals(['column' => 1], $tenants);
 
-		$tenants = $tenantScope->getTenants();
-		$this->assertEquals(['column' => 1], $tenants);
+        $this->assertTrue($tenantScope->hasTenant('column'));
 
-		$this->assertTrue($tenantScope->hasTenant('column'));
+        $tenantScope->removeTenant('column');
 
-		$tenantScope->removeTenant('column');
+        $tenants = $tenantScope->getTenants();
+        $this->assertEquals([], $tenants);
+    }
 
-		$tenants = $tenantScope->getTenants();
-		$this->assertEquals([], $tenants);
-	}
+    public function testApply()
+    {
+        $scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
+        $builder = m::mock('Illuminate\Database\Eloquent\Builder');
+        $model = m::mock('Illuminate\Database\Eloquent\Model');
 
-	public function testApply()
-	{
-		$scope   = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
-		$builder = m::mock('Illuminate\Database\Eloquent\Builder');
-		$model   = m::mock('Illuminate\Database\Eloquent\Model');
+        $scope->shouldDeferMissing();
+        $scope->shouldReceive('getModelTenants')->once()->with($model)->andReturn(['column' => 1]);
 
-		$scope->shouldDeferMissing();
-		$scope->shouldReceive('getModelTenants')->once()->with($model)->andReturn(['column' => 1]);
+        $builder->shouldReceive('getModel')->andReturn($model);
+        $builder->shouldReceive('where')->once()->with('column', '=', '1');
+        $builder->shouldReceive('macro')->once()->with('allTenants', m::type('Closure'));
 
-		$builder->shouldReceive('getModel')->andReturn($model);
-		$builder->shouldReceive('where')->once()->with("column",  "=", "1");
-		$builder->shouldReceive('macro')->once()->with("allTenants", m::type('Closure'));
+        $scope->apply($builder);
+    }
 
-		$scope->apply($builder);
-	}
+    public function testCreating()
+    {
+        $scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
+        $model = m::mock('Illuminate\Database\Eloquent\Model');
 
-	public function testCreating()
-	{
-		$scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
-		$model = m::mock('Illuminate\Database\Eloquent\Model');
+        $scope->shouldDeferMissing();
+        $scope->shouldReceive('getModelTenants')->with($model)->andReturn(['column' => 1]);
 
-		$scope->shouldDeferMissing();
-		$scope->shouldReceive('getModelTenants')->with($model)->andReturn(['column' => 1]);
+        $model->shouldDeferMissing();
+        $model->shouldReceive('hasGlobalScope')->andReturn(true);
 
-		$model->shouldDeferMissing();
-		$model->shouldReceive('hasGlobalScope')->andReturn(true);
+        $scope->creating($model);
 
-		$scope->creating($model);
+        $this->assertEquals(1, $model->column);
+    }
 
-		$this->assertEquals(1, $model->column);
-	}
+    public function testGetModelTenants()
+    {
+        $scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
+        $model = m::mock('Illuminate\Database\Eloquent\Model');
 
-	public function testGetModelTenants()
-	{
-		$scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
-		$model = m::mock('Illuminate\Database\Eloquent\Model');
+        $scope->shouldDeferMissing();
+        $scope->shouldReceive('getTenantId')->once()->andReturn(1);
 
-		$scope->shouldDeferMissing();
-		$scope->shouldReceive('getTenantId')->once()->andReturn(1);
+        $model->shouldReceive('getTenantColumns')->once()->andReturn(['column']);
 
-		$model->shouldReceive('getTenantColumns')->once()->andReturn(['column']);
+        $modelTenants = $scope->getModelTenants($model);
 
-		$modelTenants = $scope->getModelTenants($model);
+        $this->assertEquals(['column' => 1], $modelTenants);
+    }
 
-		$this->assertEquals(['column' => 1], $modelTenants);
-	}
+    /**
+     * @expectedException \AuraIsHere\LaravelMultiTenant\Exceptions\TenantColumnUnknownException
+     */
+    public function testGetTenantIdThrowsException()
+    {
+        $scope = new TenantScope();
 
-	/**
-	 * @expectedException \AuraIsHere\LaravelMultiTenant\Exceptions\TenantColumnUnknownException
-	 */
-	public function testGetTenantIdThrowsException()
-	{
-		$scope = new TenantScope;
+        $scope->getTenantId('column');
+    }
 
-		$scope->getTenantId('column');
-	}
+    public function testDisable()
+    {
+        $scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
+        $builder = m::mock('Illuminate\Database\Eloquent\Builder');
+        $model = m::mock('Illuminate\Database\Eloquent\Model');
 
-	public function testDisable()
-	{
-		$scope   = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope');
-		$builder = m::mock('Illuminate\Database\Eloquent\Builder');
-		$model   = m::mock('Illuminate\Database\Eloquent\Model');
+        $scope->shouldDeferMissing();
+        $scope->shouldReceive('getModelTenants')->with($model)->andReturn(['column' => 1])->never();
 
-		$scope->shouldDeferMissing();
-		$scope->shouldReceive('getModelTenants')->with($model)->andReturn(['column' => 1])->never();
+        $builder->shouldReceive('getModel')->andReturn($model)->never();
+        $builder->shouldReceive('where')->with('column', '=', '1')->never();
 
-		$builder->shouldReceive('getModel')->andReturn($model)->never();
-		$builder->shouldReceive('where')->with("column",  "=", "1")->never();
+        $model->shouldReceive('getTenantWhereClause')->with('column', 1)->andReturn("table.column = '1'")->never();
 
-		$model->shouldReceive('getTenantWhereClause')->with('column', 1)->andReturn("table.column = '1'")->never();
+        $scope->disable();
+        $scope->apply($builder);
+    }
 
-		$scope->disable();
-		$scope->apply($builder);
-	}
-
-	public function testAllTenantsExtension()
+    public function testAllTenantsExtension()
     {
         $builder = m::mock('Illuminate\Database\Eloquent\Builder');
         $builder->shouldDeferMissing();
-        
+
         $scope = m::mock('AuraIsHere\LaravelMultiTenant\TenantScope[remove]');
         $scope->extend($builder);
         $callback = $builder->getMacro('allTenants');
 
         $givenBuilder = m::mock('Illuminate\Database\Eloquent\Builder');
         $givenBuilder->shouldReceive('getModel')->andReturn($model = m::mock('Illuminate\Database\Eloquent\Model'));
-        
+
         $scope->shouldReceive('remove')->once()->with($givenBuilder);
 
         $result = $callback($givenBuilder);
