@@ -38,11 +38,10 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$scope->shouldDeferMissing();
 		$scope->shouldReceive('getModelTenants')->once()->with($model)->andReturn(['column' => 1]);
 
-		$builder->shouldReceive('getModel')->andReturn($model);
 		$builder->shouldReceive('where')->once()->with("column",  "=", "1");
 		$builder->shouldReceive('macro')->once()->with("allTenants", m::type('Closure'));
 
-		$scope->apply($builder);
+		$scope->apply($builder, $model);
 	}
 
 	public function testCreating()
@@ -101,7 +100,7 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
 		$model->shouldReceive('getTenantWhereClause')->with('column', 1)->andReturn("table.column = '1'")->never();
 
 		$scope->disable();
-		$scope->apply($builder);
+		$scope->apply($builder, $model);
 	}
 
 	public function testAllTenantsExtension()
@@ -116,7 +115,7 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase {
         $givenBuilder = m::mock('Illuminate\Database\Eloquent\Builder');
         $givenBuilder->shouldReceive('getModel')->andReturn($model = m::mock('Illuminate\Database\Eloquent\Model'));
         
-        $scope->shouldReceive('remove')->once()->with($givenBuilder);
+        $scope->shouldReceive('remove')->once()->with($givenBuilder, $model);
 
         $result = $callback($givenBuilder);
         $this->assertEquals($givenBuilder, $result);

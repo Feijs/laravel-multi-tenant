@@ -80,14 +80,14 @@ class TenantScope extends GlobalScope implements ScopeInterface
 	 * Apply the scope to a given Eloquent query builder.
 	 *
 	 * @param Illuminate\Database\Eloquent\Builder $builder
+	 * @param Illuminate\Database\Eloquent\Model $model
 	 *
 	 * @return void
 	 */
-	public function apply(Builder $builder)
+	public function apply(Builder $builder, Model $model)
 	{
 		if (! $this->enabled) return;
 
-		$model = $builder->getModel();
 		// Use whereRaw instead of where to avoid issues with bindings when removing
 		foreach ($this->getModelTenants($model) as $tenantColumn => $tenantId)
 		{
@@ -104,7 +104,7 @@ class TenantScope extends GlobalScope implements ScopeInterface
     public function extend(Builder $builder)
     {
         $builder->macro('allTenants', function (Builder $builder) {
-            $this->remove($builder);
+            $this->remove($builder, $builder->getModel());
             return $builder;
         });
     }

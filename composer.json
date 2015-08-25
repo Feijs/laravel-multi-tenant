@@ -9,24 +9,18 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "illuminate/support": "4.2.*",
-        "sofa/laravel-global-scope": "dev-laravel-4.2"
+        "illuminate/support": "4.2.*|5.0.*|5.1.*",
+        "sofa/laravel-global-scope": "0.2@dev"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
         "phpunit/phpunit": "~4.0",
-        "laravel/framework": "4.2.*"
+        "illuminate/support": "4.2.*|5.0.*|5.1.*"
     },
     "autoload": {
-        "psr-0": {
-            "AuraIsHere\\LaravelMultiTenant\\": "src/"
+       "psr-4": {
+            "AuraIsHere\\LaravelMultiTenant\\": "src/AuraIsHere/LaravelMultiTenant/"
         }
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/Feijs/laravel-global-scope"
-        }
-    ],
     "minimum-stability": "stable"
 }
