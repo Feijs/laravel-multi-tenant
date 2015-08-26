@@ -15,19 +15,18 @@ class TenantScopedModelTraitTest extends PHPUnit_Framework_TestCase
         m::close();
     }
 
-	public function testGetTenantColumns()
-	{
-		$model = m::mock('TenantScopedModelStub');
-		$model->shouldDeferMissing();
+    public function testGetTenantColumns()
+    {
+        $model = m::mock('TenantScopedModelStub');
+        $model->shouldDeferMissing();
 
-		Config::shouldReceive('get')->with('tenant.default_tenant_columns')
-			  ->once()->andReturn(['company_id']);
-		$this->assertEquals(['company_id'], $model->getTenantColumns());
+        Config::shouldReceive('get')->with('tenant.default_tenant_columns')
+              ->once()->andReturn(['company_id']);
+        $this->assertEquals(['company_id'], $model->getTenantColumns());
 
-		$model->tenantColumns = ['tenant_id'];
-		$this->assertEquals(['tenant_id'], $model->getTenantColumns());
-
-	}
+        $model->tenantColumns = ['tenant_id'];
+        $this->assertEquals(['tenant_id'], $model->getTenantColumns());
+    }
 
     /**
      * @expectedException \AuraIsHere\LaravelMultiTenant\Exceptions\TenantModelNotFoundException
@@ -77,5 +76,3 @@ class TenantScopedModelStub extends ParentModel
         return 'table';
     }
 }
-
-
