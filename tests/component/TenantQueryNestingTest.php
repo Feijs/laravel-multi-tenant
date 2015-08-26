@@ -57,7 +57,7 @@ class TenantQueryNestingTest extends ComponentTestCase
         //Query to be tested
         $tenantQuery = $this->getTestOuterQuery($this->model->newQuery());
         $tenantQuery = $this->getTestHasQuery($tenantQuery);
-        
+
         $this->assertEquals($nestedQuery->getQuery()->getRawBindings(), $tenantQuery->getQuery()->getRawBindings());
         $this->assertEquals(strlen($nestedQuery->toSql()), strlen($tenantQuery->toSql()));
     }
