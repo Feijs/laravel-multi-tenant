@@ -8,6 +8,7 @@ use AuraIsHere\LaravelMultiTenant\TenantQueryBuilder;
 use AuraIsHere\LaravelMultiTenant\TenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 
@@ -172,7 +173,7 @@ trait TenantScopedModelTrait
     public function applyGlobalScopes($builder)
     {
         foreach ($this->getGlobalScopes() as $scope) {
-            if ($scope instanceof LoftyScope) {
+            if ($scope instanceof LoftyScope || $scope instanceof SoftDeletingScope) {
                 $scope->apply($builder, $this);
             } else {
                 $nestable = $this->newQueryWithoutScopes();
@@ -203,3 +204,4 @@ trait TenantScopedModelTrait
         return call_user_func_array([$query, $method], $parameters);
     }
 }
+
