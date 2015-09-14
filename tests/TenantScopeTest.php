@@ -38,8 +38,9 @@ class TenantScopeTest extends PHPUnit_Framework_TestCase
         $scope->shouldReceive('getModelTenants')->once()->with($model)->andReturn(['column' => 1]);
 
         $builder->shouldReceive('getModel')->andReturn($model);
-        $builder->shouldReceive('where')->once()->with('column', '=', '1');
         $builder->shouldReceive('macro')->once()->with('allTenants', m::type('Closure'));
+
+        $model->shouldReceive('addTenantClause')->once()->with($builder, 'column', 1)->andReturn($builder);
 
         $scope->apply($builder);
     }

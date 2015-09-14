@@ -44,6 +44,20 @@ trait TenantScopedModelTrait
     }
 
     /**
+     * Add a Tenant clause
+     *
+     * @param Illuminate\Database\Eloquent\Builder $builder
+     * @param string $tenantColumn
+     * @param int $tenantId
+     *
+     * @return Illuminate\Database\Eloquent\Builder $builder
+     */
+    public function addTenantClause($builder, $tenantColumn, $tenantId)
+    {
+        return $builder->where($tenantColumn, '=', $tenantId);
+    }
+
+    /**
      * Override the default findOrFail method so that we can rethrow a more useful exception.
      * Otherwise it can be very confusing why queries don't work because of tenant scoping issues.
      *

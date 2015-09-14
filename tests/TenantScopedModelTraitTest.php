@@ -37,6 +37,17 @@ class TenantScopedModelTraitTest extends PHPUnit_Framework_TestCase
         TenantScopedModelStub::findOrFail(1, []);
     }
 
+    public function testaddTenantWhereClause()
+    {
+        $model = m::mock('TenantScopedModelStub');
+        $model->shouldDeferMissing();
+
+        $builder = m::mock('Illuminate\Database\Eloquent\Builder');
+        $builder->shouldReceive('where')->once()->with('column', '=', 3)->andReturn($builder);
+
+        $model->addTenantClause($builder, 'column', 3);
+    }
+
     /**
      * @expectedException AuraIsHere\LaravelMultiTenant\Exceptions\TenantColumnUnknownException
      */

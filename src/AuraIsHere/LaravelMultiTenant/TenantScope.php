@@ -89,8 +89,9 @@ class TenantScope extends GlobalScope implements ScopeInterface, LoftyScope
 
         $model = $builder->getModel();
         // Use whereRaw instead of where to avoid issues with bindings when removing
-        foreach ($this->getModelTenants($model) as $tenantColumn => $tenantId) {
-            $builder->where($tenantColumn, '=', $tenantId);
+        foreach ($this->getModelTenants($model) as $tenantColumn => $tenantId) 
+        {
+            $builder = $model->addTenantClause($builder, $tenantColumn, $tenantId);
         }
 
         $this->extend($builder);
