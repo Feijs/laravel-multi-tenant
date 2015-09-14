@@ -31,11 +31,12 @@ trait TenantRelationScopedModelTrait
      */
     public function addTenantClause($builder, $tenantColumn, $tenantId)
     {
-        return $builder->whereHas($this->tenant_relation, function($q) use ($tenantId)
+        $tenantKey = $this->{$this->tenant_relation}()->getOtherKey();
+
+        return $builder->whereHas($this->tenant_relation, function($q) use ($tenantKey, $tenantId)
                         {
-                            $q->where('id', '=', $tenantId);
+                            $q->where($tenantKey, '=', $tenantId);
                         });
     }
-
 
 }

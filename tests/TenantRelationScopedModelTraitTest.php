@@ -16,8 +16,12 @@ class TenantRelationScopedModelTraitTest extends PHPUnit_Framework_TestCase
 
     public function testAddTenantWhereClause()
     {
+        $relation = m::mock('Illuminate\Database\Eloquent\Relations\BelongsToMany');
+        $relation->shouldReceive('getOtherKey')->once()->andReturn('foo');
+
         $model = m::mock('TenantRelationScopedModelStub');
         $model->shouldDeferMissing();
+        $model->shouldReceive('tenants')->once()->andReturn($relation);
 
         $builder = m::mock('Illuminate\Database\Eloquent\Builder');
         $builder->shouldReceive('whereHas')->once()->with('tenants', m::type('Closure'))->andReturn($builder);
@@ -31,7 +35,7 @@ class TenantRelationScopedModelStub extends Model
     use TenantRelationScopedModelTrait;
 
     protected $tenant_relation = 'tenants';
-    
+
     public function tenants() 
     {
         $this->belongsToMany('Tenant');
